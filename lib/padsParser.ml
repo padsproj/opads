@@ -299,3 +299,18 @@ let parse_EOR (state : pads_parse_state) =
 
 
 *)
+
+(* Load and Store functions *)
+    
+let pads_load (def_rep : 'a) (def_md : 'b pads_md) (parse : ('a, 'b pads_md) pads_parser) (path : string) : ('a * 'b pads_md) =
+  match read_file path with
+  | Error l -> (def_rep, {def_md with 
+    pads_num_errors = def_md.pads_num_errors+1; 
+    pads_error_msg = l @ def_md.pads_error_msg})
+  | Contents s ->
+     let (rep, md, final) = parse (new_state s) in
+      if final.rest = [] && final.current = "" then (rep, md)
+      else (rep, 
+        {md with pads_num_errors=md.pads_num_errors + 1; 
+        pads_error_msg = (Printf.sprintf "Extra text: %s\n%s" final.current 
+          (String.concat "\n" final.rest)) :: md.pads_error_msg})

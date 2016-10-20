@@ -17,7 +17,7 @@ Library pads
   BuildTools:    ocamlbuild
   BuildDepends:  re, core,re.glob,str,threads,ppx_let
   CompiledObject: best
-  Modules:       Pads, PadsParser, PadsLoader
+  Modules:       Pads, PadsParser
 
 Library parser
   Path:           parsing

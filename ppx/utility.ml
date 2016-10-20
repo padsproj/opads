@@ -5,13 +5,11 @@ open Pads_types
 
 (* GLOBALS *)
 
-let debug = true (* TODO: Make false for final version *)
+let debug = false
 let firstDef = ref true
 let fresh_cellP = ref 0
 
 let padsUnitTbl : (varname,bool) Hashtbl.t = Hashtbl.create 13
-
-
 
 (* HELPER FUNCTIONS *)
 
@@ -105,9 +103,7 @@ let raise_loc_err loc (s: string) =
      let err = Location.error ~loc s in
      raise (Location.Error(err))
 
-(* Forest helpers *)
-
-(* It is non-obvious why we can't use Str or Forest in here... *)
+(* Helpers *)
 
 let find_ident_in_str (name : string) (expr : string) : bool =
   let re = Re_str.regexp (Printf.sprintf "\\b%s\\b" name) in

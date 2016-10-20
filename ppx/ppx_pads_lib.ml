@@ -822,7 +822,7 @@ let def_generator loc (plist : (string * pads_node ast) list) : structure =
     in
     let parse =
       [%stri let [%p pat_make_var loc (pads_parse_name name)] : [%t parse_typ] =
-               PadsLoader.pads_load [%e def_rep] [%e def_md] [%e exp_make_ident loc (pads_parse_s_name name)]
+               PadsParser.pads_load [%e def_rep] [%e def_md] [%e exp_make_ident loc (pads_parse_s_name name)]
       ][@metaloc loc]
     in
 
