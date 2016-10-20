@@ -26,8 +26,8 @@ Library parser
   Findlibname:    parser
   BuildDepends:   pads, ppx_deriving.show, compiler-libs.common # str, core, re
   CompiledObject: best
-  Modules:	   Parser_helper
-  InternalModules: Lexer, All_types, Parser
+  Modules:	   Pads_parser_helper
+  InternalModules: Pads_lexer, Pads_types, Pads_parser
 
 Library ppx
   Path:           ppx
@@ -48,15 +48,3 @@ Executable ppx_pads
   MainIs:         ppx_pads.ml
   BuildDepends:   pads, pads.ppx, ppx_tools.metaquot
   CompiledObject: best
-
-#compiler-libs.common - Might need in future
-#ppx_driver 
-
-#Executable test_hello
-#  Build$:       flag(tests)
-#  Install:      false
-#  Path:         examples
-#  Custom:       true
-#  CompiledObject: best
-#  BuildDepends: pads, unix, str
-#  MainIs:       hello.ml

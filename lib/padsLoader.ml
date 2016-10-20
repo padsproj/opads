@@ -1,4 +1,3 @@
-open Forest
 open Pads
 open PadsParser
 
@@ -20,6 +19,7 @@ let pads_load (def_rep : 'a) (def_md : 'b pads_md) (parse : ('a, 'b pads_md) pad
          ^ (String.concat "\n" final.rest)) :: md.pads_error_msg})
       *)
 
+      (* Make an interface for this
 let pads_to_forest (md : 'a pads_md) (path : string) : ('a pads_md Forest.forest_md) =
   { num_errors = md.pads_num_errors;
     error_msg = md.pads_error_msg;
@@ -30,7 +30,8 @@ let pads_to_forest (md : 'a pads_md) (path : string) : ('a pads_md Forest.forest
 
 let pads_load_for_forest (parse : filepath -> ('a * 'b pads_md)) (path : filepath) : ('a * 'b pads_md forest_md) =
   let (rep,md) = parse path in (rep, pads_to_forest md path)
-  
+*)  
+
 let pads_store mani path =
   let data = mani.pads_str in
   Core.Std.Out_channel.write_all path ~data

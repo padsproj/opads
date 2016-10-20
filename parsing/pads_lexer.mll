@@ -1,6 +1,6 @@
 {
 open Lexing
-open Forest_parser
+open Pads_parser
 
 exception SyntaxError of string
 
@@ -16,12 +16,7 @@ let codeToChar str =
   if newint > 255 || newint < 0
   then raise (SyntaxError ("Not a valid character code:" ^ str))
   else Char.chr newint
-
-type cLexer =
-  | FLex
-  | SLex
-  | PLex
-      
+    
 (* Stole from OCaml compiler *)
 let char_for_backslash = function
     'n' -> '\010'
@@ -47,95 +42,10 @@ let hexacode = 'x' hexaD hexaD?
 
 let backslash_escapes = ['\\' '\'' '"' 'n' 't' 'b' 'r' ' ']
 
-rule forest_read =
+rule read =
   parse
-  | white { forest_read lexbuf }
-  | newline { next_line lexbuf; forest_read lexbuf }
-  | "directory" { DIR}
-  | "typeof" { TYPEOF }
-  | "file" { FILE }
-  | "option" { OPT }
-  | "link" { LINK }
-  | "pads" { PADS }
-  | "URL" { URL }
-  | "is" { IS }
-  | "matches" { MATCHES }
-  | "GL" { GL }
-  | "RE" { RE }
-  | "where" { WHERE }
-  | "map" { MAP }
-  | "rec" { REC }
-  | "(*" { read_comment FLex 0 lexbuf }
-  | "::" { DCOLON }
-  | "<-" { BARROW }
-  | "&&" { AND }
-  | "||" { OR }
-  | '"' { read_string (Buffer.create 17) lexbuf }
-  | '@' { AT }
-  | '+' { PLUS }
-  | '_' { ULINE }
-  | '{' { LBRACE }
-  | '}' { RBRACE }
-  | '[' { LBRACK }
-  | ']' { RBRACK }
-  | '(' { LPAREN }
-  | ')' { RPAREN }
-  | ',' { COMMA }
-  | ';' { SEMICOLON }
-  | '|' { BAR }
-  | '<' { LANGB }
-  | '>' { RANGB }
-  | '=' { EQ }
-  | '$' { read_antiquot (Buffer.create 17) lexbuf }
-  | 'p' { PRED }
-  | '~' { NEG }
-  | lid { ID (Lexing.lexeme lexbuf) }
-  (*
-  | "fun" { FUN }
-    | "->" { FARROW }*)
-  | _   { raise (SyntaxError ("Unexpected character: " ^ Lexing.lexeme lexbuf)) }
-  | eof { EOF }
-
-and skin_read = 
-  parse
-  | white { skin_read lexbuf }
-  | newline { next_line lexbuf; skin_read lexbuf }
-  | "typeof" { TYPEOF }
-  | "file" { FILE }
-  | "option" { OPT }
-  | "link" { LINK }
-  | "map" { MAP }
-  | "rec" { REC }
-  | "(*" { read_comment SLex 0 lexbuf }
-  | "&&" { AND }
-  | "||" { OR }
-  | '+' { PLUS }
-  | '_' { ULINE }
-  | '{' { LBRACE }
-  | '}' { RBRACE }
-  | '[' { LBRACK }
-  | ']' { RBRACK }
-  | '(' { LPAREN }
-  | ')' { RPAREN }
-  | ',' { COMMA }
-  | ';' { SEMICOLON }
-  | '|' { BAR }
-  | '<' { LANGB }
-  | '>' { RANGB }
-  | '=' { EQ }
-  | 'p' { PRED }
-  | '~' { NEG }
-  (*
-  | "fun" { FUN }
-    | "->" { FARROW }*)
-  | lid { ID (Lexing.lexeme lexbuf) }
-  | _   { raise (SyntaxError ("Unexpected character: " ^ Lexing.lexeme lexbuf)) }
-  | eof { EOF }
-
-and pads_read =
-  parse
-  | white { pads_read lexbuf }
-  | newline { next_line lexbuf; pads_read lexbuf }
+  | white { read lexbuf }
+  | newline { next_line lexbuf; read lexbuf }
   | int { INT (int_of_string (Lexing.lexeme lexbuf)) }
   | "ptype" { PTYPE }
   | "pdatatype" { PDATATYPE }
@@ -145,7 +55,7 @@ and pads_read =
   | "Plist" { PLIST }
   | "EOF" { PEOF }
   | "of" { OF }
-  | "(*" { read_comment PLex 0 lexbuf }
+  | "(*" { read_comment 0 lexbuf }
   | '"' { read_string (Buffer.create 17) lexbuf }
   | '$' { read_antiquot (Buffer.create 17) lexbuf }
 
@@ -176,18 +86,14 @@ and pads_read =
   | _   { raise (SyntaxError ("Unexpected character: " ^ Lexing.lexeme lexbuf)) }
   | eof { EOF }
 
-and read_comment from n =
+and read_comment n =
   parse
-  | newline { next_line lexbuf; read_comment from n lexbuf }
-  | "(*" { read_comment from (n+1) lexbuf }
-  | "*)" { if n < 1 then
-            match from with
-            | FLex -> forest_read lexbuf 
-            | SLex -> skin_read lexbuf
-            | PLex -> pads_read lexbuf
-           else read_comment from (n-1) lexbuf }
-  | [ ^ '(' '*' ')' ] { read_comment from n lexbuf }
-  | _    { read_comment from n lexbuf }
+  | newline { next_line lexbuf; read_comment n lexbuf }
+  | "(*" { read_comment (n+1) lexbuf }
+  | "*)" { if n < 1 then read lexbuf
+           else read_comment (n-1) lexbuf }
+  | [ ^ '(' '*' ')' ] { read_comment n lexbuf }
+  | _    { read_comment n lexbuf }
   | eof  { raise (SyntaxError ("Comment is not terminated")) }
 
 and read_antiquot buf = 

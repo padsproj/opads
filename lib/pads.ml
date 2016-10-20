@@ -8,8 +8,7 @@ type 'a pads_md =
   }
 
 type filepath = string
-
-
+  
 (* Regular expressions.
  * Snd part of REd is default rep *)
 type pads_re = 
@@ -43,6 +42,7 @@ type 'a padsManifest =
 
 (* FUNCTIONS! *)
 
+    
 let empty_md x = 
   { pads_num_errors = 0;
     pads_error_msg = [];
@@ -62,6 +62,11 @@ let make_mani s m =
     pads_str = s;
     pads_manifest = m}
 
+let print_md_errors md =
+  List.iter (fun err ->                                                         
+    Printf.printf "Error: %s\n" err
+  ) md.pads_error_msg    
+  
 (* TODO: See if you can replace with Str *)
 let sub_starts_with s1 s2 = 
   String.length s1 >= String.length s2 &&

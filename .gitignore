@@ -9,6 +9,8 @@
 *.cmxs
 *.cmxa
 *~
+*#
+.#*
 
 # ocamlbuild working directory
 _build/
@@ -25,3 +27,6 @@ setup.data
 setup.log
 setup.ml
 myocamlbuild.ml
+
+# Scripts
+compilePads.sh

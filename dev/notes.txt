@@ -1,0 +1,8 @@
+
+Testing:
+Useful for parser testing:
+#mod_use "pads_types.ml";;
+#mod_use "pads_parser.ml";;
+#mod_use "pads_lexer.ml";;
+let lexbuf = Lexing.from_string "d = directory { test is \"Woo\" ::  file } ";;
+Pads_parser.prog Pads_lexer.read lexbuf;;

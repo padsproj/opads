@@ -1,6 +1,5 @@
 open Pads
 open PadsParser
-open Forest
 
 let alphaNumRE = REd ("[a-zA-Z0-9]*", "a")
 let alphaRE = REd ("[a-zA-Z]*", "a")
@@ -571,124 +570,6 @@ let allGwFiles x = List.flatten (List.map (fun sub -> gwFiles (sub.hru)) x)
 let allOpsFiles x = List.flatten (List.map (fun sub -> opsFiles (sub.hru)) x)
 let allSepFiles x = List.flatten (List.map (fun sub -> septFiles (sub.hru)) x)
 
-let mapSize m = PathMap.fold (fun _ _ x -> x + 1) m 0
-;;
-
-[%%skin {|
-  delayAll = <>;map(delayAll)
-
-  skin2 = delayAll
-  skin3 = skin2;cio(><)
-  skin4 = skin3;fig(><)
-  skin5 = skin4;subs(><;[><])
-
-  predSkin = delayAll;fig(><);subs(><;[><]);cio(><)
-  
-  inCalib = predSkin;bsn(><);gws(><;[><]);hrus(><;[><])
-  outCalib = delayAll;outRch(><)
-
-  inLU = predSkin;mgts(><;[><])
-  outLU = delayAll;outStd(><)
-|}]
-
-(* TODO: Change here if we want a different cost function *)
-module CostMon = Forest.CostUnitMon
-
-[%%forest {|
-
-cioFile = pads cio
-
-figFile = pads figLines
-
-sub = pads subFile
-
-pcp = pads pcpFile
-
-tmp = pads tmpFile
-
-crop = pads plantFile
-
-till = pads tillFile
-
-urban = pads urbanLines
-
-bsn = pads bsnFile
-
-wus = pads wusFile
-
-wgn = pads wgnFile
-
-chm = pads chmFile
-
-pest = pads pestFile
-
-fert = pads fertFile
-
-sol = pads solFile
-
-wnd = pads dateFloatFile
-rh = pads dateFloatFile
-slr = pads dateFloatFile
-
-hru = pads hruFile
-mgt = pads mgtFile
-gw = pads gwFile
-rte = pads swatLines
-swq = pads swatLines
-pnd = pads swatLines
-sep = pads swatLines
-
-swatIn = directory {
-  cio is "file.cio" :: cioFile;
-  fig is $cio.figFile.str$:: figFile;
-  bsn is $basinFile cio$ :: bsn;
-  subs is [f :: sub | f <- $subFiles fig$ ];
-  hrus is [f :: hru | f <- $allHruFiles subs$ ];
-  mgts is map [f :: mgt | f <- $allMgtFiles subs$ ];
-  gws is [ f :: gw | f <- $allGwFiles subs$ ];
-  cst is $cstFile cio$ :: file option;
-  wnd is $wndFile cio$ :: wnd option;
-  rh is $rhFile cio$ :: rh option;
-  slr is $slrFile cio$ :: slr option;
-  plant is $plantFile cio$ :: crop;
-  till is $tillFile cio$ :: till;
-  pest is $pestFile cio$ :: pest;
-  fert is $fertFile cio$ :: fert;
-  urban is $urbanFile cio$ :: urban;
-  pcps is [ f :: pcp | f <- $pcpFiles cio$ ];
-  tmps is [ f :: tmp | f <- $tmpFiles cio$ ];
-  rtes is [f :: rte | f <- $rteFiles fig$ ];
-  swqs is [f :: swq | f <- $swqFiles fig$ ];
-  sols is [f :: sol | f <- $allSolFiles subs$ ];
-  chms is [f :: chm | f <- $allChmFiles subs$ ];
-  seps is [ f :: sep | f <- $allSepFiles subs$ ];
-  wgns is [ f :: wgn | f <- $allWgnFiles subs$ ];
-  pnds is [ f :: pnd | f <- $allPndFiles subs$ ];
-  wuss is [ f :: wus | f <- $allWusFiles subs$ ]
-} 
-
-swatICB = swatIn @ inCalib
-swatILU = swatIn @ inLU
-swatIP = swatIn @ predSkin
-
-swatOut = directory {
-  outHru is "output.hru" :: pads outputHruFile;
-  outPst is "output.pst" :: file;
-  outRch is "output.rch" :: pads reachFile;
-  outRsv is "output.rsv" :: file;
-  outSed is "output.sed" :: pads outputSedFile;
-  outStd is "output.std" :: file;
-  outSub is "output.sub" :: pads outputSubFile
-}
-swatOCB = swatOut @ outCalib
-swatOLU = swatOut @ outLU
-swatOP = swatOut @ delayAll
-
-reach = pads reachFile
-flow = pads flowFile
-|}]
-
-
 let vl_to_s = function
   | SwatValue (SwatInt i) ->i.intLabel ^ ":" ^ i.intDescription.str
   | SwatValue (SwatFloat f) -> f.floatLabel ^ ":" ^ f.floatDescription.str
@@ -698,97 +579,85 @@ let vl_to_s = function
 let dir = Filename.concat (Sys.getcwd ())  "../../swatData/TxtInOut_currentnew"
 
 let test_reach () =
-  let (rep, md) = reach_load (Filename.concat dir "output.rch") in
+  let (rep, md) = reachFile_parse (Filename.concat dir "output.rch") in
   Printf.printf "Loading reach\n";
-  Printf.printf "Errors: %d\n" (md.num_errors);
-  List.iter print_endline md.error_msg
+  Printf.printf "Errors: %d\n" (md.pads_num_errors);
+  List.iter print_endline md.pads_error_msg
 
 let test_flow () =
-  let (rep, md) = flow_load (Filename.concat dir "FC_flowgage.csv") in
-  Printf.printf "Errors: %d\n" (md.num_errors);
-  List.iter print_endline md.error_msg
-
-let test_swat () =
-  let (rep, md) = swatIn_load dir in
-  Printf.printf "Errors: %d\n" (md.num_errors);
-  List.iter print_endline md.error_msg
+  let (rep, md) = flowFile_parse (Filename.concat dir "FC_flowgage.csv") in
+  Printf.printf "Errors: %d\n" (md.pads_num_errors);
+  List.iter print_endline md.pads_error_msg
 
 let test_cio () =
   Printf.printf "Loading cio\n";
-  let (rep, md) = cioFile_load (Filename.concat dir "file.cio") in
+  let (rep, md) = cio_parse (Filename.concat dir "file.cio") in
   Printf.printf "Fig file: %s\n" rep.figFile.str;
-  Printf.printf "Errors: %d\n" (md.num_errors);
-  Forest.print_md_errors md
+  Printf.printf "Errors: %d\n" (md.pads_num_errors);
+  Pads.print_md_errors md
                                  
 let test_fig () =
-  let (fig_rep, fig_md) = figFile_load (Filename.concat dir "fig.fig") in
-  Printf.printf "Errors: %d\n" (fig_md.num_errors);
-  List.iter print_endline fig_md.error_msg
-  (*
-  List.iter2 (fun r md ->
-    match r with
-    | Sub fs -> Printf.printf "%s:%s" fs.subInfo fs.subFile
-    | _ -> ()
-  ) fig_rep fig_md.data.pads_data
-  *)
+  let (fig_rep, fig_md) = figLines_parse (Filename.concat dir "fig.fig") in
+  Printf.printf "Errors: %d\n" (fig_md.pads_num_errors);
+  List.iter print_endline fig_md.pads_error_msg
 
 let test_sub () =
   Printf.printf "Checking sub file\n"; flush stdout;
-  let (sub_rep, sub_md) = sub_load (Filename.concat dir "000010000.sub") in
-  Printf.printf "Errors: %d\n" (sub_md.num_errors);
-  List.iter print_endline sub_md.error_msg
+  let (sub_rep, sub_md) = subFile_parse (Filename.concat dir "000010000.sub") in
+  Printf.printf "Errors: %d\n" (sub_md.pads_num_errors);
+  List.iter print_endline sub_md.pads_error_msg
 
 let test_pcp () =
-  let (pcp_rep, pcp_md) = pcp_load (Filename.concat dir "pcp1.pcp") in
-  Printf.printf "Errors: %d\n" (pcp_md.num_errors);
-  List.iter print_endline pcp_md.error_msg
+  let (pcp_rep, pcp_md) = pcpFile_parse (Filename.concat dir "pcp1.pcp") in
+  Printf.printf "Errors: %d\n" (pcp_md.pads_num_errors);
+  List.iter print_endline pcp_md.pads_error_msg
 
 let test_tmp () =
-  let (tmp_rep, tmp_md) = tmp_load (Filename.concat dir "tmp1.tmp") in
-  Printf.printf "Errors: %d\n" (tmp_md.num_errors);
-  List.iter print_endline tmp_md.error_msg
+  let (tmp_rep, tmp_md) = tmpFile_parse (Filename.concat dir "tmp1.tmp") in
+  Printf.printf "Errors: %d\n" (tmp_md.pads_num_errors);
+  List.iter print_endline tmp_md.pads_error_msg
 
 let test_crop () =
-  let (crop_rep, crop_md) = crop_load (Filename.concat dir "plant.dat") in
-  Printf.printf "Errors: %d\n" (crop_md.num_errors);
-  List.iter print_endline crop_md.error_msg
+  let (crop_rep, crop_md) = plantFile_parse (Filename.concat dir "plant.dat") in
+  Printf.printf "Errors: %d\n" (crop_md.pads_num_errors);
+  List.iter print_endline crop_md.pads_error_msg
 
 let test_till () =
-  let (till_rep, till_md) = till_load (Filename.concat dir "till.dat") in
-  Printf.printf "Errors: %d\n" (till_md.num_errors);
-  List.iter print_endline till_md.error_msg
+  let (till_rep, till_md) = tillFile_parse (Filename.concat dir "till.dat") in
+  Printf.printf "Errors: %d\n" (till_md.pads_num_errors);
+  List.iter print_endline till_md.pads_error_msg
 
 let test_urban () =
-  let (urban_rep, urban_md) = urban_load (Filename.concat dir "urban.dat") in
-  Printf.printf "Errors: %d\n" (urban_md.num_errors);
-  List.iter print_endline urban_md.error_msg
+  let (urban_rep, urban_md) = urbanLines_parse (Filename.concat dir "urban.dat") in
+  Printf.printf "Errors: %d\n" (urban_md.pads_num_errors);
+  List.iter print_endline urban_md.pads_error_msg
 
 let test_wus () =
-  let (wus_rep, wus_md) = wus_load (Filename.concat dir "000010000.wus") in
-  Printf.printf "Errors: %d\n" (wus_md.num_errors);
-  List.iter print_endline wus_md.error_msg
+  let (wus_rep, wus_md) = wusFile_parse (Filename.concat dir "000010000.wus") in
+  Printf.printf "Errors: %d\n" (wus_md.pads_num_errors);
+  List.iter print_endline wus_md.pads_error_msg
 
 let test_wgn () =
-  let (wgn_rep, wgn_md) = wgn_load (Filename.concat dir "000010000.wgn") in
-  Printf.printf "Errors: %d\n" (wgn_md.num_errors);
-  List.iter print_endline wgn_md.error_msg
+  let (wgn_rep, wgn_md) = wgnFile_parse (Filename.concat dir "000010000.wgn") in
+  Printf.printf "Errors: %d\n" (wgn_md.pads_num_errors);
+  List.iter print_endline wgn_md.pads_error_msg
 
 let test_chm () =
-  let (chm_rep, chm_md) = chm_load (Filename.concat dir "000010001.chm") in
-  Printf.printf "Errors: %d\n" (chm_md.num_errors); flush stdout;
-  List.iter print_endline chm_md.error_msg
+  let (chm_rep, chm_md) = chmFile_parse (Filename.concat dir "000010001.chm") in
+  Printf.printf "Errors: %d\n" (chm_md.pads_num_errors); flush stdout;
+  List.iter print_endline chm_md.pads_error_msg
 
 let test_pest () =
-  let (pest_rep, pest_md) = pest_load (Filename.concat dir "pest.dat") in
-  Printf.printf "Errors: %d\n" (pest_md.num_errors);
-  List.iter print_endline pest_md.error_msg
+  let (pest_rep, pest_md) = pestFile_parse (Filename.concat dir "pest.dat") in
+  Printf.printf "Errors: %d\n" (pest_md.pads_num_errors);
+  List.iter print_endline pest_md.pads_error_msg
 
 let test_fert () =
-  let (fert_rep, fert_md) = fert_load (Filename.concat dir "fert.dat") in
-  Printf.printf "Errors: %d\n" (fert_md.num_errors);
-  List.iter print_endline fert_md.error_msg
+  let (fert_rep, fert_md) = fertFile_parse (Filename.concat dir "fert.dat") in
+  Printf.printf "Errors: %d\n" (fert_md.pads_num_errors);
+  List.iter print_endline fert_md.pads_error_msg
 
 let test_sol () =
-  let (sol_rep, sol_md) = sol_load (Filename.concat dir "000010001.sol") in
-  Printf.printf "Errors: %d\n" (sol_md.num_errors);
-  List.iter print_endline sol_md.error_msg
+  let (sol_rep, sol_md) = solFile_parse (Filename.concat dir "000010001.sol") in
+  Printf.printf "Errors: %d\n" (sol_md.pads_num_errors);
+  List.iter print_endline sol_md.pads_error_msg

@@ -1,17 +1,14 @@
 open Asttypes
 open Parsetree
 open Ast_helper
-open All_types
+open Pads_types
 
 (* GLOBALS *)
 
 let debug = true (* TODO: Make false for final version *)
 let firstDef = ref true
-let fresh_cellF = ref 0
 let fresh_cellP = ref 0
 
-let skinTbl : (varname,skin_node ast) Hashtbl.t = Hashtbl.create 13
-let forestTbl : (varname,forest_node ast) Hashtbl.t = Hashtbl.create 13
 let padsUnitTbl : (varname,bool) Hashtbl.t = Hashtbl.create 13
 
 
@@ -121,31 +118,14 @@ let find_ident_in_str (name : string) (expr : string) : bool =
 
 let get_loc (a : 'a ast) : Location.t = a.loc
 
-let freshF () = 
-  incr fresh_cellF;
-  Printf.sprintf "forest_%d" !fresh_cellF
-
 let freshP () = 
   incr fresh_cellP;
   Printf.sprintf "pads_%d" !fresh_cellP
 
-(* Forest Name functions *)
-let rep_name = Printf.sprintf "%s_rep"
-let md_name = Printf.sprintf "%s_md"
-let load_name = Printf.sprintf "%s_load"
-let list_name =  Printf.sprintf "%s_list"
-let att_name =  Printf.sprintf "%s_att"
-let acc_name =  Printf.sprintf "%s_acc"
-let new_name =  Printf.sprintf "%s_new"
-let new_nameR =  Printf.sprintf "%s_newRec"
-let cost_name =  Printf.sprintf "%s_cost"
-let manifest_name = Printf.sprintf "%s_manifest"
-let ucur_name =  Printf.sprintf "%s_ucur"
-
 
 (* Pads Name functions *)
-let pads_rep_name = rep_name
-let pads_md_name = md_name
+let pads_rep_name =  Printf.sprintf "%s_rep"
+let pads_md_name = Printf.sprintf "%s_md"
 let pads_default_rep_name = Printf.sprintf "%s_default_rep"
 let pads_default_md_name = Printf.sprintf "%s_default_md"
 let pads_parse_name = Printf.sprintf "%s_parse"
@@ -153,22 +133,3 @@ let pads_parse_s_name = Printf.sprintf "%s_parse_state"
 let pads_manifest_name = Printf.sprintf "%s_manifest"
 let pads_to_string_name = Printf.sprintf "%s_to_string"
 let pads_to_buffer_name = Printf.sprintf "%s_to_buffer"
-
-
-(*
-let rrep_name = rep_name
-let rmd_name = md_name
-let prep_name s = Printf.sprintf "%s_prep" s
-let pmd_name s = Printf.sprintf "%s_pmd" s
-*)
-
-(*
-
-let incload_name s = Printf.sprintf "%s_incload" s
-let store_name s = Printf.sprintf "%s_store" s
-let incstore_name s = Printf.sprintf "%s_incstore" s
-let new_nameR s =  Printf.sprintf "%s_newRec" s
-let cost_name s =  Printf.sprintf "%s_cost" s
-let inccost_name s =  Printf.sprintf "%s_inccost" s
-let incmanifest_name s = Printf.sprintf "%s_incmanifest" s
-*)
