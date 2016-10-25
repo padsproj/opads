@@ -29,14 +29,14 @@ type read_result =
   | Error of string list 
   | Contents of string list
 
-type pads_manifest_errors =
+type pads_manifest_error =
 | RegexMatchError of string
 | ListLengthError
 | VariantMismatchError
 | ListLengthMismatchError
 
 type 'a padsManifest =
-  { pads_man_errors : pads_manifest_errors list;
+  { pads_man_errors : pads_manifest_error list;
     pads_str : string;
     pads_manifest : 'a}
 
