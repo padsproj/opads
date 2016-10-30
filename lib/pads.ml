@@ -14,8 +14,6 @@ type filepath = string
 type pads_re = 
   | RE of string
   | REd of string * string
-
-
       
 (* Often used as terminators *)
 type pads_constant =
@@ -61,12 +59,20 @@ let make_mani s m =
   { pads_man_errors = [];
     pads_str = s;
     pads_manifest = m}
-
+    
 let print_md_errors md =
   List.iter (fun err ->                                                         
     Printf.printf "Error: %s\n" err
   ) md.pads_error_msg    
-  
+
+let exit_on_error md =
+  if md.pads_num_errors > 0
+  then begin
+    print_md_errors md;
+    exit 1;
+  end
+  else ()
+    
 (* TODO: See if you can replace with Str *)
 let sub_starts_with s1 s2 = 
   String.length s1 >= String.length s2 &&

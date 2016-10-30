@@ -1,54 +1,65 @@
-OCaml Pads requires OCaml 4.03.0 or greater,
-plus a few packages.
+# Introduction to OCaml PADS
 
-You should be able to get everything you need by running:
+## What is OCaml PADS?
 
-> opam update
+OCaml PADS is a data-description language embedded in OCaml using PPX extension
+points. It can be used to easily generate safe parsing and storing functions for
+ad hoc data formats.  OCaml PADS is an OCaml implementation of [PADS][padsproj].
 
-> opam switch 4.03.0
+<a name="install"/>
+## Installation
 
-> eval $(opam config env)
+OCaml PADS requires OCaml 4.03.0 or greater and a few OPAM packages.
 
-> opam install ocamlfind oasis utop menhir core
+You can get all the prerequisites by following these steps:
 
-To build:
+1. [Install OPAM][opamInstall]
+2. Run the following commands in your shell:
 
-> make && make install
+   > opam update
 
-To rebuild:
+   > opam upgrade
 
-> make && make reinstall
+   > opam switch 4.03.0
 
-If you get errors, try
+   > eval $(opam config env)
 
-> ocamlfind remove forest
+   > opam install ocamlfind oasis utop menhir core
 
-You can desugar a Forest source file into vanilla OCaml using
+4. Clone this repository
+5. In the root of the clone, run:
+
+   To build:
+
+   > make && make install
+
+   To rebuild:
+
+   > make && make reinstall
+
+   If you get errors, try
+
+   > ocamlfind remove pads
+
+<a name="usage"/>
+## Usage
+
+In the examples directory, there is a script for
+desugaring a PADS source file into vanilla OCaml used by running:
 
 > desugar.sh [file.ml]
 
-Examples:
+There are two recommended ways to build a PADS source file using
+either ocamlfind or ocamlbuild (which uses ocamlfind):
 
-Each example is in a separate folder in the examples directory.
+> ocamlfind ocamlc -thread -package pads,pads.pads_ppx -linkpkg [file.ml]
 
-To compile, desugar, or run example [x], run (in the examples directory)
-- Compile: 
-
-> make [x]C
-
-- Desugar: 
-
-> make [x]D
-
-- Run:
-
-> make [x]R
-
-Ex:
-For example simple:
-
-> make simpleC
-> make simpleD
-> make simpleR
-
-See the [wiki](https://github.com/padsproj/oforest/wiki) for the iForest syntax:
+> ocamlbuild -use-ocamlfind -pkgs pads.pads_ppx -tags thread,'warn(-30)' -I
+  [project folder containing fileName.ml] [fileName].native
+  
+Where pads.pads_ppx imports the extension interpreter for PADS and the
+thread tag is required due to some other libraries.
+  
+[padsproj]: 
+[opamInstall]: https://opam.ocaml.org/doc/Install.html
+"How to install OPAM"

@@ -2,7 +2,7 @@ OASISFormat:    0.4
 OCamlVersion:   >= 4.03
 FindlibVersion: >= 1.3.2
 Name:           OPads
-Version:        0.0.1
+Version:        0.5.0
 Synopsis:       Declarative language for parsing ad hoc data
 Authors:        Jonathan DiLorenzo, Richard Zhang, Nate Foster, Kathleen Fisher
 License:        LGPL
@@ -19,25 +19,24 @@ Library pads
   CompiledObject: best
   Modules:       Pads, PadsParser
 
-Library parser
+Library pads_parser
   Path:           parsing
   BuildTools:     ocamlbuild, menhir, ocamllex
   Findlibparent:  pads
-  Findlibname:    parser
-  BuildDepends:   pads, ppx_deriving.show, compiler-libs.common # str, core, re
+  Findlibname:    pads_parser
+  BuildDepends:   pads, ppx_deriving.show, compiler-libs.common
   CompiledObject: best
-  Modules:	   Pads_parser_helper
-  InternalModules: Pads_lexer, Pads_types, Pads_parser
+  Modules:	   Pads_parser_helper, Pads_types
+  InternalModules: Pads_lexer, Pads_parser
 
-Library ppx
+Library pads_ppx
   Path:           ppx
   BuildTools:     ocamlbuild
   Findlibparent:  pads
-  Findlibname:    ppx
-  BuildDepends:   re, re.str, pads, pads.parser, ppx_tools.metaquot # core, threads, 
+  Findlibname:    pads_ppx
+  BuildDepends:   re, re.str, pads, pads.pads_parser, ppx_tools.metaquot
   CompiledObject: best
-  Modules:        Ppx_pads
-  InternalModules: Ppx_pads_lib, Utility
+  Modules:        Ppx_pads_lib, Utility
   XMETAEnable:    true
   XMETADescription: Syntax extension for Pads
   XMETARequires:   str re core threads ppx_tools.metaquot
@@ -46,5 +45,5 @@ Library ppx
 Executable ppx_pads
   Path:           ppx
   MainIs:         ppx_pads.ml
-  BuildDepends:   pads, pads.ppx, ppx_tools.metaquot
+  BuildDepends:   pads, pads.pads_ppx, ppx_tools.metaquot
   CompiledObject: best

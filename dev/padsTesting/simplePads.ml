@@ -54,7 +54,7 @@ let main =
   Printf.printf "At: %d\n" c_state.loc.character;
   Printf.printf "matched: %s\n" c_rep;
   let (test_string_rep, _, test_string_state) = hello_parse_state c_state in
-  Printf.printf "At: %d\n" test_string_state.loc.character;
+  Printf.printf "Remaining: %s\n" test_string_state.current;
   let (i1_rep, i1_md, i1_state) = int_pads_parse_state {current="3\t3";  rest=[]; loc=start_loc} in
   Printf.printf "matched: %d\n" i1_rep;
   let (i2_rep, i2_md, i2_state) = int_pads_parse_state {current="-3\t3";  rest=[]; loc=start_loc} in

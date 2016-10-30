@@ -1,6 +1,5 @@
 open Pads
 open PadsParser
-open PadsLoader
 
 [%%pads {| 
   ptype parseUntil = Pstring(".")
@@ -10,7 +9,7 @@ open PadsLoader
   ptype constString = "Hello"
 |}]
 
-let (x,_) = parseUntil_parse "test.txt"
+let (x,_) = parseUntil_parse "examples/padsTesting/test.txt"
 let () = print_endline x
 
 let (x,_,_) = parseUntil_parse_state {current = "Hello there." ; rest = []; loc = start_loc}
