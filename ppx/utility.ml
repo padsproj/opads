@@ -7,7 +7,7 @@ open Pads_types
 
 let debug = false
 let firstDef = ref true
-let fresh_cellP = ref 0
+let fresh_cell = ref 0
 
 let padsUnitTbl : (varname,bool) Hashtbl.t = Hashtbl.create 13
 
@@ -16,13 +16,10 @@ let padsUnitTbl : (varname,bool) Hashtbl.t = Hashtbl.create 13
 let debug_out s = if debug then s else ""
 
 let get_NaL (ast : 'a ast) : ('a * loc) = ast.node, ast.loc
-
   
-let mk_ast (loc : loc) (node : 'a) : 'a ast = 
-  { node; loc; payload = PNone; }
+let mk_ast = Pads_types.mk_ast
     
-let mk_p_ast (loc : loc) (payload : fPayload) (node : 'a) : 'a ast = 
-  { node; loc; payload}
+let mk_p_ast = Pads_types.mk_p_ast
 
 (* Ast_Helpers *)
 
@@ -114,9 +111,9 @@ let find_ident_in_str (name : string) (expr : string) : bool =
 
 let get_loc (a : 'a ast) : Location.t = a.loc
 
-let freshP () = 
-  incr fresh_cellP;
-  Printf.sprintf "pads_%d" !fresh_cellP
+let fresh () = 
+  incr fresh_cell;
+  Printf.sprintf "pads_%d" !fresh_cell
 
 
 (* Pads Name functions *)

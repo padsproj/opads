@@ -8,7 +8,6 @@ open Utility
 
 
 let pads_mapper argv =
-  (* Our getenv_mapper only overrides the handling of expressions in the default mapper. *)
   { default_mapper with
     structure = fun mapper strl ->  
       let rec pads_replace acc str =
@@ -22,12 +21,9 @@ let pads_mapper argv =
           let pads_ast = Pads_parser_helper.pads_parse_string pexp_loc pads_str in
           let _ = List.iter (fun (v,s) -> Hashtbl.add Utility.padsUnitTbl v (Ppx_pads_lib.check_uniticity s)) pads_ast in
           let ocaml_asts : Parsetree.structure = Ppx_pads_lib.def_generator pstr_loc pads_ast in
-            ocaml_asts :: acc
-              
-            (*
-          let _ = List.iter (fun (x,p) -> Printf.fprintf stdout "%s=%s\n" x (All_types.show_ast All_types.pp_pads_node p)) pads_ast in
-            *)
-         (* Rest is kept the same*)
+          ocaml_asts :: acc
+            
+         (* Rest is unchanged *)
          | x -> [default_mapper.structure_item mapper x] :: acc
 
             

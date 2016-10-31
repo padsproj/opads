@@ -50,8 +50,6 @@ let rec parse_gen (past : pads_node ast) : Parsetree.expression =
   | Pconst t -> [%expr PadsParser.parse_string [%e pf_converter loc t]][@metaloc loc]
   | Pvar x -> exp_make_ident loc (pads_parse_s_name x)
   | Ppred(x,past,cond) ->
-     (* begin [@warning "-26"] *)
-     (* TODO: Should add better error info probably *)
      let repp,mdp = (pat_make_var loc x),(pat_make_var loc (pads_md_name x)) in
      let repe,mde = (exp_make_ident loc x),(exp_make_ident loc (pads_md_name x)) in
      [%expr (fun state ->
@@ -367,7 +365,7 @@ let rec pads_rep_type_gen (past : pads_node ast) : (type_declaration list * core
     if fields = []
     then decls,[%type: unit][@metaloc loc]
     else
-      let name = freshP () in
+      let name = fresh () in
       let recType = typ_make_type_decl loc ~kind:(Ptype_record fields) name in
       (decls @ [recType],  typ_make_constr loc name)
   | Pdatatype vlist ->
@@ -377,7 +375,7 @@ let rec pads_rep_type_gen (past : pads_node ast) : (type_declaration list * core
        decli@decls,constr::clist
      ) vlist ([],[])
      in
-     let name = freshP () in
+     let name = fresh () in
      let vdecl = typ_make_type_decl loc ~kind:(Ptype_variant clist) name in
      (decls @ [vdecl],  typ_make_constr loc name)
   | Ptuple(p1,p2) ->
@@ -425,7 +423,7 @@ let rec pads_mani_type_gen (past : pads_node ast) : (type_declaration list * cor
     if fields = []
     then decls,[%type: unit Pads.padsManifest][@metaloc loc]
     else
-      let name = freshP () in 
+      let name = fresh () in 
       let recType = typ_make_type_decl loc ~kind:(Ptype_record fields) name in
       (decls @ [recType], [%type: [%t typ_make_constr loc name] Pads.padsManifest ][@metaloc loc])
   | Pdatatype vlist ->
@@ -435,7 +433,7 @@ let rec pads_mani_type_gen (past : pads_node ast) : (type_declaration list * cor
        decli@decls,constr::clist
      ) vlist ([],[])
      in
-     let name = freshP () in
+     let name = fresh () in
      let vdecl = typ_make_type_decl loc ~kind:(Ptype_variant clist) name in
      (decls @ [vdecl],  [%type: [%t typ_make_constr loc name] Pads.padsManifest][@metaloc loc])
   | Ptuple (p1,p2) -> 
@@ -482,7 +480,7 @@ let rec pads_md_type_gen (past : pads_node ast) : (type_declaration list * core_
     if fields = []
     then decls,[%type: unit Pads.pads_md][@metaloc loc]
     else
-      let name = freshP () in 
+      let name = fresh () in 
       let recType = typ_make_type_decl loc ~kind:(Ptype_record fields) name in
       (decls @ [recType], [%type: [%t typ_make_constr loc name] Pads.pads_md ][@metaloc loc])
   | Pdatatype vlist ->
@@ -492,7 +490,7 @@ let rec pads_md_type_gen (past : pads_node ast) : (type_declaration list * core_
        decli@decls,constr::clist
      ) vlist ([],[])
      in
-     let name = freshP () in
+     let name = fresh () in
      let vdecl = typ_make_type_decl loc ~kind:(Ptype_variant clist) name in
      (decls @ [vdecl],  [%type: [%t typ_make_constr loc name] Pads.pads_md][@metaloc loc])
   | Ptuple (p1,p2) -> 
@@ -522,8 +520,6 @@ let rec pads_to_string (past : pads_node ast) : Parsetree.expression =
     | Pfloat -> [%expr Buffer.add_string buf @@ string_of_float rep][@metaloc loc]
     | Pstring (PFStr s) -> [%expr Buffer.add_string buf rep; Buffer.add_string buf [%e exp_make_string loc s]][@metaloc loc]
     | Pstring (PFRE re) -> [%expr Buffer.add_string buf rep][@metaloc loc]
-(* TODO: Add back to above if you make regex terminations consume
-  Buffer.add_string buf [%e default_rep_gen (mk_ast loc @@ Pconst (PFRE re))]*)
     | Pstring _ -> [%expr Buffer.add_string buf rep][@metaloc loc]
     | Pconst (PFInt n) -> [%expr Buffer.add_string buf [%e exp_make_string loc (string_of_int n)]][@metaloc loc]
     | Pconst (PFStr s) -> [%expr Buffer.add_string buf [%e exp_make_string loc s]][@metaloc loc]
@@ -619,23 +615,14 @@ let rec pads_manifest (past : pads_node ast) : Parsetree.expression =
     | Pfloat -> [%expr Pads.make_mani (string_of_float rep) ()][@metaloc loc]
     | Pstring (PFStr s) -> [%expr Pads.make_mani (rep ^ [%e exp_make_string loc s]) ()][@metaloc loc]
     | Pstring (PFRE re) -> [%expr Pads.make_mani rep ()][@metaloc loc]
-    (* TODO: Add back to above if you make regex terminations consume
-     * ^ [%e default_rep_gen (mk_ast loc @@ Pconst (PFRE re))] *)
-    (* TODO: Fix fixed length str: <:expr< if String.length rep = $int:string_of_int n$ then [] else [ListLengthError] >> *)
     | Pstring _ -> [%expr Pads.make_mani rep ()][@metaloc loc]
     | Pconst (PFInt n) -> [%expr Pads.make_mani [%e exp_make_string loc (string_of_int n)] ()][@metaloc loc]
     | Pconst (PFStr s) -> [%expr Pads.make_mani [%e exp_make_string loc s] ()][@metaloc loc]
     | Pconst PFEOF -> [%expr Pads.make_mani "" ()][@metaloc loc]
     | Pconst (PFRE _) -> [%expr Pads.make_mani rep ()][@metaloc loc]
-       (* TODO: Add regex check 
-          let regex = Str.regexp r in
-          let matches = Str.string_match regex rep 0 && Str.matched_string rep = rep in
-          if matches then [] else [RegexMatchError r]] >>
-       *)
     | Ppred (_,past,_) -> [%expr [%e pads_manifest past] (rep,md)][@metaloc loc]
     | Pvar(vname) -> [%expr [%e exp_make_ident loc (pads_manifest_name vname)] (rep,md)][@metaloc loc]
     | Plist(past,sep,term) ->
-       (* TODO: Check list length is right. Check if there's a mismatch between rep and md length *)
        let s = match term with
          | PFEOF
          | PFInt _ -> exp_make_string loc ""
@@ -857,4 +844,4 @@ let def_generator loc (plist : (string * pads_node ast) list) : structure =
   in
 
   let types, lets = List.fold_right def_gen plist ([], []) in
-  (Str.type_ ~loc Recursive types) :: lets (* What is this? *)
+  (Str.type_ ~loc Recursive types) :: lets

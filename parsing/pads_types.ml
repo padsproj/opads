@@ -17,9 +17,8 @@ type 'a ast =
     payload : fPayload;
     loc : loc;
   } [@@deriving show]
-(* AST Types for PADS *)
 
-(* Inbuilt / OCaml types *)
+(* AST Types for PADS *)
 type precord_entry =
   | Named of varname * pads_node ast
   | Unnamed of pads_node ast [@@deriving show]
@@ -47,8 +46,8 @@ and pads_node =
   | Pdatatype of (string * pads_node ast) list
       [@@deriving show]
 
-let mk_ast (loc : loc) (node : 'a) : 'a ast = 
-  { node; loc; payload = PNone; }
-
 let mk_p_ast (loc : loc) (payload : fPayload) (node : 'a) : 'a ast = 
   { node; loc; payload}
+    
+let mk_ast (loc : loc) (node : 'a) : 'a ast = mk_p_ast loc PNone node
+

@@ -38,7 +38,7 @@ type 'a padsManifest =
     pads_str : string;
     pads_manifest : 'a}
 
-(* FUNCTIONS! *)
+(* Functions *)
 
     
 let empty_md x = 
@@ -73,7 +73,6 @@ let exit_on_error md =
   end
   else ()
     
-(* TODO: See if you can replace with Str *)
 let sub_starts_with s1 s2 = 
   String.length s1 >= String.length s2 &&
   String.sub s1 0 (String.length s2) = s2
@@ -84,9 +83,6 @@ let read_file (path:string) : read_result =
   else if Sys.is_directory path then
     Error [Printf.sprintf "Is a directory: %s" path]
   else 
-    (*
-    let l = Core.Std.In_channel.read_all path in
-    *)
     let ch = open_in path in
     let l = Core.Std.In_channel.input_lines ~fix_win_eol:false ch in
     let _ = close_in ch in

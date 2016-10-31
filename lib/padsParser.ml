@@ -45,15 +45,6 @@ let new_state sl =
 let gen_err_msg s state =
   Printf.sprintf "Line %d, character %d: %s" state.loc.line state.loc.character s
 
-(*
-let rem_newline s =
-  try
-    let i = String.index s '\n' in
-    String.sub s 0 (i + 1)
-  with | _ -> s
-*)
-
-(* TODO: Make sure this is a good end_of_file test *)
 let check_eof (state : pads_parse_state) = state.current = "" && state.rest = []
 
 let parse_string (s : pads_constant) (state : pads_parse_state) =
@@ -67,7 +58,7 @@ let parse_string (s : pads_constant) (state : pads_parse_state) =
        if Pads.sub_starts_with state.current s
        then ((), empty_md (), update_state state (String.length s))
        else ((), error_md [gen_err_msg (Printf.sprintf "%s not found" (String.escaped s)) state] (), state)
-  | PTRE reg -> (* Only used for list separators (hopefully) *)
+  | PTRE reg -> (* Only used for list separators *)
      let s,d = 
        match reg with
        | RE s  -> s,""
@@ -98,9 +89,6 @@ let parse_regex reg =
      
 let parse_pstring (s : pads_constant) (state : pads_parse_state) =
   match s with
-  (* TODO: Not clear what the right thing is here, but for the sake of Richard's PADS,
-   * I probably need this to check that n chars isn't farther ahead than \n 
-   *)
   | PTI n ->
      if String.length state.current >= n
      then (String.sub state.current 0 n, empty_md (), update_state state n)
@@ -108,9 +96,7 @@ let parse_pstring (s : pads_constant) (state : pads_parse_state) =
            error_md [gen_err_msg (Printf.sprintf "Not enough chars: %d needed" n) state] (), 
            update_state state (String.length state.current))
   | PTS str ->
-     begin (*
-       Printf.printf "Term is: %s\n" (String.escaped str);
-             Printf.printf "String is: %s\n" (String.escaped state.current); *)
+     begin 
        let regexp = Str.quote str |> Str.regexp in
        try 
 	 let n = Str.search_forward regexp state.current 0 in
@@ -127,7 +113,6 @@ let parse_pstring (s : pads_constant) (state : pads_parse_state) =
 	  state)
      end
   | PTRE reg ->
-     (* TODO: Should we consume terminator? *)
      let s,d = 
        match reg with
        | RE s  -> s,""
@@ -279,26 +264,6 @@ let list_to_buf f sep buf (r,m) =
     | _ -> failwith "Md list size and rep list size are not the same"
   in
   ltb (r,m)
-     
-(*
-let parse_char (state : pads_parse_state) =
-  if String.length state.current <= state.loc.character - 1
-  then (' ', error_md [gen_err_msg "String was empty" state] (), state)
-  else
-    (String.get state.current (state.loc.character - 1), empty_md (), update_state state 1)
-
-let parse_EOF (state : pads_parse_state) =
-  if String.length state.current = state.loc.character - 1 && state.rest = []
-  then ((), empty_md (), state)
-  else ((), error_md [gen_err_msg "Not end of file" state] (), state)
-
-let parse_EOR (state : pads_parse_state) =
-  if String.length state.current = state.loc.character - 1 then ((), empty_md (), inc_line state)
-  else ((), error_md [gen_err_msg "Not end of line" state] (), inc_line state)
-
-
-
-*)
 
 (* Load and Store functions *)
     

@@ -34,7 +34,16 @@ let x_parse_string (f : lexbuf -> (varname * 'a) list) (loc : Location.t) (str :
     lex_curr_p = loc.loc_start;
   } in
   f lexbuf
-       
-let pads_parse_with_error = x_parse_with_error Pads_parser.prog Pads_lexer.read       
 
+let x_lex_string lexer str =
+  let lexbuf = Lexing.from_string str in
+  let rec lexing buf =
+    match lexer buf with
+    | Pads_parser.EOF -> []
+    | x -> x :: (lexing lexbuf) 
+  in
+  lexing lexbuf
+       
+let pads_parse_with_error = x_parse_with_error Pads_parser.prog Pads_lexer.read      
 let pads_parse_string = x_parse_string pads_parse_with_error
+let pads_lex_string = x_lex_string Pads_lexer.read
