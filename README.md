@@ -44,6 +44,16 @@ You can get all the prerequisites by following these steps:
 <a name="usage"/>
 ## Usage
 
+See the `sample` example for a quick overview of most of the currently available
+PADS constructs. This example (along with any other future examples) can be run
+by entering the examples directory and running:
+
+> `make [exName]` 
+
+> `[exName].native`
+
+where `exName` should be `sample` to compile and run the `sample` example.
+
 In the examples directory, there is a script for
 desugaring a PADS source file into vanilla OCaml used by running:
 
@@ -60,6 +70,6 @@ either ocamlfind or ocamlbuild (which uses ocamlfind):
 Where pads.pads_ppx imports the extension interpreter for PADS and the
 thread tag is required due to some other libraries.
   
-[padsproj]: 
+[padsproj]: http://pads.cs.tufts.edu/ "PADS Project"
 [opamInstall]: https://opam.ocaml.org/doc/Install.html
 "How to install OPAM"
