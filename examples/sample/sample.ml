@@ -41,7 +41,7 @@ let ws = REd ("[ \t]*", "   ")
   ptype intRegex = $RE "[0-9]+"$  
 
   (* Same as above, but defaults to "0" *)
-  ptype intZRegex = $REd ("[0-9]+","0")$  
+  ptype intDRegex = $REd ("[0-9]+","0")$  
 
   (* Pint is what you should use for integers though *)
   ptype pint = Pint
@@ -60,7 +60,7 @@ let ws = REd ("[ \t]*", "   ")
      while just parsing and throwing away unnamed parts. *)
   ptype pRec = { x : posInt; ","; 
                  y : cl_string; ",";
-                 z : Pint }
+                 z : Pint; "\n" }
 
 
   (* It is possible to try multiple different parsings
@@ -97,8 +97,7 @@ let test_strings () =
 let pad_to_7 =
   List.map (fun s ->
     let len = String.length s in
-    s ^ (String.make (7-len) ' '))
-                     
+    s ^ (String.make (7-len) ' '))                     
     
 let test_lists () =
   let l1 = pad_to_7 ["This";"is";"a";"file";"that";"is";"9"] in
@@ -110,8 +109,39 @@ let test_lists () =
      necessary for the constant string length to work. *)
   assert (partial = l1);
   assert(file = l2)
+
+let test_nums () =
+  let state = {current="157.8"; rest=[]; loc=start_loc} in
+  let (irep,imd,state) = intRegex_parse_state state in
+  let (failrep,failmd,state) = intDRegex_parse_state state in
+  (* Since it failed, it doesn't consume any characters, 
+     so we have a float remaining *)
+  let (frep,fmd,state) = pfloat_parse_state state in
+  let posState = {current="1"; rest=[]; loc=start_loc} in
+  let negState = {current="-1"; rest=[]; loc=start_loc} in
+  let (posrep,posmd,_)= posInt_parse_state posState in
+  let (negrep,negmd,_)= posInt_parse_state negState in
+  assert (irep = "157");
+  assert (failrep = "0");
+  assert (frep = 0.8);
+  assert (posrep = 1);
+  assert (posmd.pads_num_errors = 0);
+  assert (negrep = -1);
+  assert (negmd.pads_num_errors = 1)
+
+let test_complex () =
+  let state = {current="10,7 chars,-10\n"; rest=["Hellosome_separator50"]; loc=start_loc} in
+  let (recrep,recmd,state) = pRec_parse_state state in
+  let (tuprep,tupmd,_) = tupType_parse_state state in
+  assert (recrep.x = 10);
+  assert (recrep.y = "7 chars");
+  assert (recrep.z = -10);
+  assert (fst tuprep = Hello ());
+  assert (snd tuprep = Some_int(50))
     
 let _ =
   let _ = test_strings () in
   let _ = test_lists () in
+  let _ = test_nums () in
+  let _ = test_complex () in
   Printf.printf "Since we haven't failed, all tests were successful!\n"
