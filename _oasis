@@ -1,8 +1,8 @@
 OASISFormat:    0.4
-OCamlVersion:   >= 4.03
+OCamlVersion:   >= 4.05
 FindlibVersion: >= 1.3.2
 Name:           OPads
-Version:        0.5.0
+Version:        0.6.0
 Synopsis:       Declarative language for parsing ad hoc data
 Authors:        Jonathan DiLorenzo, Richard Zhang, Nate Foster, Kathleen Fisher
 License:        LGPL
