@@ -9,7 +9,7 @@ ad hoc data formats.  OCaml PADS is an OCaml implementation of [PADS][padsproj].
 <a name="install"/>
 ## Installation
 
-OCaml PADS requires OCaml 4.03.0 or greater and a few OPAM packages.
+OCaml PADS requires OCaml 4.05.0 or greater and a few OPAM packages.
 
 You can get all the prerequisites by following these steps:
 
@@ -20,7 +20,7 @@ You can get all the prerequisites by following these steps:
 
    > opam upgrade
 
-   > opam switch 4.03.0
+   > opam switch 4.05.0
 
    > eval $(opam config env)
 

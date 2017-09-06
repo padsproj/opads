@@ -15,7 +15,7 @@ XOCamlbuildExtraArgs: -use-menhir
 Library pads
   Path:          lib
   BuildTools:    ocamlbuild
-  BuildDepends:  re, core,re.glob,str,threads,ppx_let
+  BuildDepends:  re, core,re.glob,str,threads
   CompiledObject: best
   Modules:       Pads, PadsParser
 
