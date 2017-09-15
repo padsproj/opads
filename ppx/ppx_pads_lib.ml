@@ -607,7 +607,103 @@ let rec pads_to_string (past : pads_node ast) : Parsetree.expression =
   in
   [%expr (fun buf (rep,md) -> [%e exp])][@metaloc loc]
 
-let rec pads_manifest (past : pads_node ast) : Parsetree.expression = 
+let rec pads_empty_manifest (past : pads_node ast) : Parsetree.expression = 
+  let (e,loc) = get_NaL past in
+  match e with
+  | Pint 
+  | Pfloat 
+  | Pstring _ 
+  | Pconst _ -> [%expr Pads.make_mani ~errors:[EmptyManifestError] "" ()][@metaloc loc]
+  | Ppred (_,past,_) -> pads_empty_manifest past
+  | Pvar(vname) -> exp_make_ident loc (pads_empty_manifest_name vname)
+  | Plist(past,_,_) ->  [%expr Pads.make_mani ~errors:[EmptyManifestError] "" []]
+  | Precord (rlist) ->
+     let named_rlist = Core.List.filter_map ~f:(fun re ->
+       match re with
+       | Unnamed _ -> None
+       | Named(label,padsAst) -> Some(label,padsAst)
+     ) rlist
+     in
+     let manifestAssign =
+       List.map (fun (lbli,_) -> (pads_manifest_name lbli),(pads_manifest_name lbli)) named_rlist
+     in
+     let end_exp =
+       [%expr
+        let subManifest = [%e exp_make_record_s loc manifestAssign] in
+        Pads.make_mani ~errors:[EmptyManifestError] "" subManifest
+       ][@metaloc loc]
+     in
+     List.fold_right (fun (label,padsAst) expressionAccumulator ->
+       let loc = get_loc past in
+       [%expr
+        let [%p pat_make_var loc (pads_manifest_name label)] = [%e pads_empty_manifest padsAst] in
+        [%e expressionAccumulator]
+       ][@metaloc loc]
+     ) named_rlist end_exp
+  | Pdatatype vlist ->
+     begin
+       match vlist with
+       | [] -> raise_loc_err loc "Pdatatype empty manifest: Somehow got a sumtype with no summands"
+       | (label,padsAst) :: _ ->
+          [%expr
+              Pads.make_mani
+              ~errors:[EmptyManifestError]
+              ""
+              [%e
+                  exp_make_construct
+                  loc
+                  ~exp:(pads_empty_manifest padsAst)
+                  (pads_manifest_name label)
+              ]
+          ][@metaloc loc]
+     end
+  | Ptuple (p1,p2) -> 
+     let b1 = check_uniticity p1 in
+     let b2 = check_uniticity p2 in
+     if b1 && b2 (* Both are unit type *)
+     then
+       [%expr Pads.make_mani ~errors:[EmptyManifestError] "" ()][@metaloc loc]
+     else if b1 (* Only p1 is unit type *)
+     then
+       [%expr
+           Pads.make_mani ~errors:[EmptyManifestError] "" [%e pads_empty_manifest p2]
+       ][@metaloc loc]
+     else if b2 (* Only p2 is unit type *)
+     then
+       [%expr
+           Pads.make_mani ~errors:[EmptyManifestError] "" [%e pads_empty_manifest p1]
+       ][@metaloc loc] 
+     else (* Neither are unit type, so we don't wanna throw away either *)
+       let plist = listify_tuple past in
+       let plist =
+         List.fold_left (fun (acc,n) p -> ((p,n)::acc),(n+1)) ([],1) plist
+  |> fst
+  |> List.rev
+       in
+       let tlist = List.filter (fun (p,_) -> not @@ check_uniticity p) plist in
+       let man = 
+         [%expr
+             Pads.make_mani
+             ~errors:[EmptyManifestError]
+             ""
+             [%e
+                 List.map (fun (_,n) -> exp_make_ident loc (Printf.sprintf "man%d" n)) tlist
+             |> exp_make_tup loc
+             ]
+         ][@metaloc loc]
+       in
+       List.fold_right (fun (padsAst,n) expressionAccumulator ->
+         if not (check_uniticity padsAst)
+         then
+           let namePattern = pat_make_var loc (Printf.sprintf "man%d" n) in
+           [%expr
+            let [%p namePattern] = [%e pads_empty_manifest padsAst] in
+            [%e expressionAccumulator]
+           ][@metaloc loc]
+         else expressionAccumulator
+       ) plist man
+  
+and pads_manifest (past : pads_node ast) : Parsetree.expression = 
   let (e,loc) = get_NaL past in
   let exp = 
     match e with
@@ -770,7 +866,6 @@ let rec pads_manifest (past : pads_node ast) : Parsetree.expression =
          ][@metaloc loc]
   in
   [%expr (fun (rep,md) -> [%e exp])][@metaloc loc]
-
      
 (* Generates the OCaml AST from PADS AST *)
 let def_generator loc (plist : (string * pads_node ast) list) : structure =
@@ -833,14 +928,20 @@ let def_generator loc (plist : (string * pads_node ast) list) : structure =
       ][@metaloc loc]
     in
 
-    let mani_typ = 
+    let manifestFunctionType = 
       [%type: ([%t typ_make_constr loc (pads_rep_name name)] * [%t typ_make_constr loc (pads_md_name name)]) ->
             [%t typ_make_constr loc (pads_manifest_name name)]][@metaloc loc] in
     let manifest =
-      [%stri let [%p pat_make_var loc (pads_manifest_name name)] : [%t mani_typ] = [%e pads_manifest past]
+      [%stri let [%p pat_make_var loc (pads_manifest_name name)] : [%t manifestFunctionType] = [%e pads_manifest past]
       ][@metaloc loc]
     in
-    new_tlist,  (manifest :: to_buffer :: to_string :: default_rep :: default_md :: parse_s :: parse :: llist)
+    let emptyManifest =
+      [%stri
+       let [%p pat_make_var loc (pads_empty_manifest_name name)]
+           : [%t typ_make_constr loc (pads_manifest_name name)] = [%e pads_empty_manifest past]
+      ][@metaloc loc]
+    in      
+    new_tlist,  (emptyManifest :: manifest :: to_buffer :: to_string :: default_rep :: default_md :: parse_s :: parse :: llist)
   in
 
   let types, lets = List.fold_right def_gen plist ([], []) in

@@ -32,6 +32,7 @@ type pads_manifest_error =
 | ListLengthError
 | VariantMismatchError
 | ListLengthMismatchError
+| EmptyManifestError
 
 type 'a padsManifest =
   { pads_man_errors : pads_manifest_error list;
@@ -55,11 +56,11 @@ let error_md l x =
     pads_extra = []
   }
 
-let make_mani s m =
-  { pads_man_errors = [];
+let make_mani ?errors:(errors=[]) s m =
+  { pads_man_errors = errors;
     pads_str = s;
     pads_manifest = m}
-    
+
 let print_md_errors md =
   List.iter (fun err ->                                                         
     Printf.printf "Error: %s\n" err
