@@ -84,6 +84,6 @@ let read_file (path:string) : read_result =
     Error [Printf.sprintf "Is a directory: %s" path]
   else 
     let ch = open_in path in
-    let l = Core.Std.In_channel.input_lines ~fix_win_eol:false ch in
+    let l = Core.In_channel.input_lines ~fix_win_eol:false ch in
     let _ = close_in ch in
     Contents l 
