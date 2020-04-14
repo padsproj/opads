@@ -279,3 +279,8 @@ let pads_load (def_rep : 'a) (def_md : 'b pads_md) (parse : ('a, 'b pads_md) pad
         {md with pads_num_errors=md.pads_num_errors + 1; 
         pads_error_msg = (Printf.sprintf "Extra text: %s\n%s" final.current 
           (String.concat "\n" final.rest)) :: md.pads_error_msg})
+
+
+let pads_store (mani : 'a padsManifest) (path : filepath) : unit =
+  let data = mani.pads_str in
+  Core.Out_channel.write_all path ~data
