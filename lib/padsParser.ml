@@ -38,7 +38,6 @@ let rec update_state (state : pads_parse_state) (n : int)  =
       loc = inc_chars n state.loc }
 
 let new_state sl =
-  let sl = List.map (fun s -> s ^ "\n") sl in
   { current = List.hd sl; rest = List.tl sl; loc = start_loc }
 
 
@@ -275,11 +274,11 @@ let pads_load (def_rep : 'a) (def_md : 'b pads_md) (parse : ('a, 'b pads_md) pad
   | Contents s ->
      let (rep, md, final) = parse (new_state s) in
       if final.rest = [] && final.current = "" then (rep, md)
-      else (rep, 
+      else
+        (rep, 
         {md with pads_num_errors=md.pads_num_errors + 1; 
         pads_error_msg = (Printf.sprintf "Extra text: %s\n%s" final.current 
           (String.concat "\n" final.rest)) :: md.pads_error_msg})
-
 
 let pads_store (mani : 'a padsManifest) (path : filepath) : unit =
   let data = mani.pads_str in

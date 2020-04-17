@@ -83,7 +83,21 @@ let read_file (path:string) : read_result =
   else if Sys.is_directory path then
     Error [Printf.sprintf "Is a directory: %s" path]
   else 
-    let ch = open_in path in
-    let l = Core.In_channel.input_lines ~fix_win_eol:false ch in
-    let _ = close_in ch in
+    let open Core in
+    let input = In_channel.read_all path in
+    let l =
+      match String.split_lines input |> List.rev with
+      | [] -> []
+      | hd :: tl ->
+        (* TODO: This is somewhat broken as it sanitizes the input. We
+           should move to a model that just uses a string *)
+        let eol = if String.is_substring ~substring:"\r\n" input then "\r\n" else "\n" in
+        let tl = List.map ~f:(fun s -> s ^ eol) tl in
+        let hd = 
+          if Core.String.is_suffix ~suffix:eol input
+          then hd ^ eol
+          else hd
+        in
+        hd :: tl |> List.rev
+    in
     Contents l 
